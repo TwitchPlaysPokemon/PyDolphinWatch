@@ -133,6 +133,13 @@ class DolphinWatch(object):
         self._reg_callback(addr, callback, True)
         self._cmd("SUBSCRIBE %d" % addr)
         
+    def wiiButton(self, wiimoteIndex, buttonstates):
+        '''
+        Sends 16 bit of data representing some buttonstates of the Wiimote.
+        see http://wiibrew.org/wiki/Wiimote#Buttons for more info
+        '''
+        self._cmd("BUTTONSTATES %d %d" % (wiimoteIndex, buttonstates))
+        
     ################### private stuff ###################
     
     def _cmd(self, cmd):
