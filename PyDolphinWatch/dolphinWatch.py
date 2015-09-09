@@ -31,6 +31,7 @@ class DolphinWatch(object):
         self._dcFunc = None
         self._callbacks = {}
         self._buf = ""
+        self._sep = "\n"
         
     def isConnected(self):
         '''
@@ -94,6 +95,22 @@ class DolphinWatch(object):
             raise ArgumentError("onDisconnect lambda must be callable.")
         self._dcFunc = func
         
+    def startBatch(self):
+        '''
+        Call this function to send following commands in a batch.
+        All following commands are guaranteed to be executed at once in Dolphin.
+        Is done by buffering and not executing anything until endBatch() is called.
+        '''
+        self._sep = ";"
+        
+    def endBatch(self):
+        '''
+        Ends the batch started with startBatch().
+        All buffered commands gets executed now and no more buffering is done.
+        '''
+        self._sep = "\n"
+        self._cmd("")
+        
     def write8(self, addr, val):
         '''
         Sends a command to write 8 bytes of data to the given address.
@@ -145,7 +162,7 @@ class DolphinWatch(object):
     def _cmd(self, cmd):
         if not self._connected:
             raise socket.error("DolphinWatch is not _connected and therefore cannot perform actions!")
-        self._sock.send(bytes(cmd + "\n"))
+        self._sock.send(bytes(cmd + self._sep))
     
     def _reg_callback(self, addr, func, subscribe=False):
         self._callbacks[addr] = (func, subscribe)
