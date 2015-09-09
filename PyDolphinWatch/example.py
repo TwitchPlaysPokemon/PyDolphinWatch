@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from dolphinWatch import DolphinWatch
 import gevent
         
-def reconnect(watcher):
+def reconnect(watcher, reason):
     print("DolphinWatch reconnection attempt in 3 seconds...")
     gevent.sleep(3)
     watcher.connect()

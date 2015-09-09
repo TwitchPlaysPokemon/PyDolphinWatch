@@ -13,6 +13,14 @@ from gevent import monkey; monkey.patch_socket()
 import gevent, socket
 from _ctypes import ArgumentError
 from StringIO import StringIO
+from util import enum
+
+DisconnectReason = enum(
+    CONNECTION_CLOSED_BY_PEER = 1,
+    CONNECTION_CLOSED_BY_HOST = 2,
+    CONNECTION_LOST           = 3,
+    CONNECTION_FAILED         = 4,
+)
 
 class DolphinWatch(object):
     def __init__(self, host="localhost", port=6000):
@@ -56,13 +64,16 @@ class DolphinWatch(object):
             gevent.spawn(self._recv)
         except socket.error:
             print("DolphinWatch connection to %s:%d failed." % (self.host, self.port))
-            self.disconnect()
+            self._disconnect(DisconnectReason.CONNECTION_FAILED)
         
     def disconnect(self):
         '''
         Disconnects the socket from the server.
-        The onDisconnect callback will be called.
+        The onDisconnect callback will be called with CONNECTION_CLOSED_BY_HOST
         '''
+        self._disconnect(self, DisconnectReason.CONNECTION_CLOSED_BY_HOST)
+        
+    def _disconnect(self, reason):
         if not self._connected:
             return
         self._connected = False
@@ -71,7 +82,7 @@ class DolphinWatch(object):
         except:
             pass
         if self._dcFunc:
-            self._dcFunc(self)
+            self._dcFunc(self, reason)
             
     def onConnect(self, func):
         '''
@@ -89,6 +100,7 @@ class DolphinWatch(object):
         Sets the callback that will be called after a connection attempt fails,
         an active connection gets closed or the connection gets lost.
         The current DolphinWatch instance will be submitted as parameter.
+        The a DisconnectReason enum will be the second parameter.
         Is initially None, and can again be assigned to None.
         '''
         if not hasattr(func, '__call__'):
@@ -191,12 +203,12 @@ class DolphinWatch(object):
                 data = self._sock.recv(1024)
                 if not data:
                     print("DolphinWatch connection closed")
-                    self.disconnect()
+                    self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_PEER)
                     return
                 self._buf += data
             except socket.error:
                 print("DolphinWatch connection lost")
-                self.disconnect()
+                self._disconnect(DisconnectReason.CONNECTION_LOST)
                 return
             buf = StringIO(self._buf)
             for line in buf:
