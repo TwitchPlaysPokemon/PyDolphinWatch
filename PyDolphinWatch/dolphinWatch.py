@@ -71,7 +71,7 @@ class DolphinWatch(object):
         Disconnects the socket from the server.
         The onDisconnect callback will be called with CONNECTION_CLOSED_BY_HOST
         '''
-        self._disconnect(self, DisconnectReason.CONNECTION_CLOSED_BY_HOST)
+        self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_HOST)
         
     def _disconnect(self, reason):
         if not self._connected:
@@ -122,36 +122,91 @@ class DolphinWatch(object):
         '''
         self._sep = "\n"
         self._cmd("")
+
+    def write(self, mode, addr, val):
+        '''
+        Sends a command to write <mode> bytes of data to the given address.
+        <mode> must be 8, 16 or 32.
+        '''
+        self._cmd("MEMSET %d %d %d" % (mode, addr, val))
+        
+    def read(self, mode, addr, callback):
+        '''
+        Sends a command to send back <mode> bytes of data at the given address.
+        The given callback function gets called with the returned value as parameter.
+        <mode> must be 8, 16 or 32.
+        '''
+        self._reg_callback(addr, callback, False)
+        self._cmd("MEMGET %d %d" % (mode, addr))
+        
+    def subscribe(self, mode, addr, callback):
+        '''
+        Sends a command to send back <mode> bytes of data at the given address,
+        repeating each time the value changes.
+        The given callback function gets called with the returned value as parameter.
+        <mode> must be 8, 16 or 32.
+        '''
+        self._reg_callback(addr, callback, True)
+        self._cmd("SUBSCRIBE %d %d" % (mode, addr))
         
     def write8(self, addr, val):
         '''
         Sends a command to write 8 bytes of data to the given address.
         '''
-        self._write(8, addr, val)
+        self.write(8, addr, val)
     
     def write16(self, addr, val):
         '''
         Sends a command to write 16 bytes of data to the given address.
         '''
-        self._write(16, addr, val)
+        self.write(16, addr, val)
     
     def write32(self, addr, val):
         '''
         Sends a command to write 32 bytes of data to the given address.
         '''
-        self._write(32, addr, val)
+        self.write(32, addr, val)
         
-    def read(self, addr, callback):
+    def read8(self, addr, callback):
+        '''
+        Sends a command to send back 8 bytes of data at the given address.
+        The given callback function gets called with the returned value as parameter. 
+        '''
+        self.read(8, addr, callback)
+        
+    def read16(self, addr, callback):
+        '''
+        Sends a command to send back 16 bytes of data at the given address.
+        The given callback function gets called with the returned value as parameter. 
+        '''
+        self.read(16, addr)
+        
+    def read32(self, addr, callback):
         '''
         Sends a command to send back 32 bytes of data at the given address.
         The given callback function gets called with the returned value as parameter. 
         '''
         if addr%4 != 0:
-            raise ArgumentError("Read address must be whole word; multiple of 4")
-        self._reg_callback(addr, callback, False)
-        self._cmd("MEMGET %d" % addr)
+            raise ArgumentError("Read32 address must be whole word; multiple of 4")
+        self.read(32, addr)
     
-    def subscribe(self, addr, callback):
+    def subscribe8(self, addr, callback):
+        '''
+        Sends a command to send back 8 bytes of data at the given address,
+        repeating each time the value changes.
+        The given callback function gets called with the returned value as parameter.
+        '''
+        self.subscribe(8, addr, callback)
+        
+    def subscribe16(self, addr, callback):
+        '''
+        Sends a command to send back 16 bytes of data at the given address,
+        repeating each time the value changes.
+        The given callback function gets called with the returned value as parameter.
+        '''
+        self.subscribe(16, addr, callback)
+        
+    def subscribe32(self, addr, callback):
         '''
         Sends a command to send back 32 bytes of data at the given address,
         repeating each time the value changes.
@@ -159,8 +214,7 @@ class DolphinWatch(object):
         '''
         if addr%4 != 0:
             raise ArgumentError("Read address must be whole word; multiple of 4")
-        self._reg_callback(addr, callback, True)
-        self._cmd("SUBSCRIBE %d" % addr)
+        self.subscribe(32, addr, callback)
         
     def wiiButton(self, wiimoteIndex, buttonstates):
         '''
@@ -216,8 +270,5 @@ class DolphinWatch(object):
                     break;
                 self._process(line.strip())
             self._buf = self._buf[buf.tell():]
-    
-    def _write(self, mode, addr, val):
-        self._cmd("MEMSET %d %d %d" % (mode, addr, val))
         
 
