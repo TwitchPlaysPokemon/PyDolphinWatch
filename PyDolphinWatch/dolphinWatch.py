@@ -223,6 +223,35 @@ class DolphinWatch(object):
         '''
         self._cmd("BUTTONSTATES %d %d" % (wiimoteIndex, buttonstates))
         
+    def pause(self):
+        '''
+        Tells Dolphin to pause the current emulation.
+        Resume with resume()
+        '''
+        self._cmd("PAUSE")
+        
+    def resume(self):
+        '''
+        Tells Dolphin to resume the current emulation.
+        '''
+        self._cmd("RESUME")
+        
+    def save(self, filename):
+        '''
+        Tells Dolphin to make a savestate and save it to <filename>.
+        '''
+        if ":?\"<> | " in filename:
+            raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
+        self._cmd("SAVE %s" % filename)
+        
+    def load(self, filename):
+        '''
+        Tells Dolphin to load the savestate located at <filename>.
+        '''
+        if ":?\"<> | " in filename:
+            raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
+        self._cmd("LOAD %s" % filename)
+        
     ################### private stuff ###################
     
     def _cmd(self, cmd):
