@@ -17,14 +17,14 @@ def reconnect(watcher, reason):
     gevent.sleep(3)
     watcher.connect()
         
-def init(watcher):
+def _initDolphinWatch(watcher):
     print("Initializing!")
-    watcher.subscribe(0x00478498, print)
+    watcher._subscribe(0x00478498, print)
 
 def main():
     watcher = DolphinWatch("localhost", 6000)
     watcher.onDisconnect(reconnect)
-    watcher.onConnect(init)
+    watcher.onConnect(_initDolphinWatch)
     watcher.connect()
     
     gevent.sleep(1000)

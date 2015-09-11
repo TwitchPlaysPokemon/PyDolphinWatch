@@ -139,7 +139,7 @@ class DolphinWatch(object):
         self._reg_callback(addr, callback, False)
         self._cmd("MEMGET %d %d" % (mode, addr))
         
-    def subscribe(self, mode, addr, callback):
+    def _subscribe(self, mode, addr, callback):
         '''
         Sends a command to send back <mode> bytes of data at the given address,
         repeating each time the value changes.
@@ -196,7 +196,7 @@ class DolphinWatch(object):
         repeating each time the value changes.
         The given callback function gets called with the returned value as parameter.
         '''
-        self.subscribe(8, addr, callback)
+        self._subscribe(8, addr, callback)
         
     def subscribe16(self, addr, callback):
         '''
@@ -204,7 +204,7 @@ class DolphinWatch(object):
         repeating each time the value changes.
         The given callback function gets called with the returned value as parameter.
         '''
-        self.subscribe(16, addr, callback)
+        self._subscribe(16, addr, callback)
         
     def subscribe32(self, addr, callback):
         '''
@@ -214,7 +214,7 @@ class DolphinWatch(object):
         '''
         if addr%4 != 0:
             raise ArgumentError("Read address must be whole word; multiple of 4")
-        self.subscribe(32, addr, callback)
+        self._subscribe(32, addr, callback)
         
     def wiiButton(self, wiimoteIndex, buttonstates):
         '''
@@ -259,8 +259,8 @@ class DolphinWatch(object):
             raise socket.error("DolphinWatch is not _connected and therefore cannot perform actions!")
         self._sock.send(bytes(cmd + self._sep))
     
-    def _reg_callback(self, addr, func, subscribe=False):
-        self._callbacks[addr] = (func, subscribe)
+    def _reg_callback(self, addr, func, _subscribe=False):
+        self._callbacks[addr] = (func, _subscribe)
         
     def _dereg_callback(self, addr):
         self._callbacks.pop(addr)
