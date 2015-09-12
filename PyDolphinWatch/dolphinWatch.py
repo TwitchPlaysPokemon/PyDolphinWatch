@@ -128,7 +128,7 @@ class DolphinWatch(object):
         Sends a command to write <mode> bytes of data to the given address.
         <mode> must be 8, 16 or 32.
         '''
-        self._cmd("MEMSET %d %d %d" % (mode, addr, val))
+        self._cmd("WRITE %d %d %d" % (mode, addr, val))
         
     def read(self, mode, addr, callback):
         '''
@@ -137,7 +137,7 @@ class DolphinWatch(object):
         <mode> must be 8, 16 or 32.
         '''
         self._reg_callback(addr, callback, False)
-        self._cmd("MEMGET %d %d" % (mode, addr))
+        self._cmd("READ %d %d" % (mode, addr))
         
     def _subscribe(self, mode, addr, callback):
         '''
@@ -148,6 +148,15 @@ class DolphinWatch(object):
         '''
         self._reg_callback(addr, callback, True)
         self._cmd("SUBSCRIBE %d %d" % (mode, addr))
+        
+    def _subscribeMulti(self, size, addr, callback):
+        '''
+        Sends a command to send back <size> bytes of data starting at the given address,
+        repeating each time the value changes. Useful for strings and arrays.
+        The given callback function gets called with the returned values in a list as parameter.
+        '''
+        self._reg_callback(addr, callback, True)
+        self._cmd("SUBSCRIBE_MULTI %d %d" % (size, addr))
         
     def write8(self, addr, val):
         '''
@@ -216,6 +225,14 @@ class DolphinWatch(object):
             raise ArgumentError("Read address must be whole word; multiple of 4")
         self._subscribe(32, addr, callback)
         
+    def subscribeMulti(self, size, addr, callback):
+        '''
+        Sends a command to send back <size> bytes of data starting at the given address,
+        repeating each time any value changes. Useful for strings or arrays.
+        The given callback function gets called with the returned values in a list as parameter.
+        '''
+        self._subscribeMulti(size, addr, callback)
+        
     def wiiButton(self, wiimoteIndex, buttonstates):
         '''
         Sends 16 bit of data representing some buttonstates of the Wiimote.
@@ -277,6 +294,17 @@ class DolphinWatch(object):
                 callback[0](val)
             else:
                 print("No recipient for address 0x%x, value 0x%x" % (addr, val))
+        elif parts[0] == "MEM_MULTI":
+            addr = int(parts[1])
+            data = [int(v) for v in parts[2:]]
+            callback = self._callbacks.get(addr)
+            if callback:
+                if not callback[1]:
+                    self._dereg_callback(addr)
+                callback[0](data)
+            else:
+                print("No recipient for address 0x%x, data %s" % (addr, data))
+            
         else:
             print("Unknown DolphinMem Command: "+line)
     
