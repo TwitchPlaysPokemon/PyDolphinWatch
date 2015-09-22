@@ -37,6 +37,7 @@ class DolphinWatch(object):
         self._sock = None
         self._cFunc = None
         self._dcFunc = None
+        self._leFunc = None
         self._callbacks = {}
         self._buf = ""
         self._sep = "\n"
@@ -88,24 +89,32 @@ class DolphinWatch(object):
         '''
         Sets the callback that will be called after a connection
         has been successfully established.
-        The current DolphinWatch instance will be submitted as parameter.
-        Is initially None, and can again be assigned to None.
+        Callback is initially None, and can again be assigned to None.
         '''
         if not hasattr(func, '__call__'):
-            raise ArgumentError("onDisconnect lambda must be callable.")
+            raise ArgumentError("onDisconnect callback must be callable.")
         self._cFunc = func
         
     def onDisconnect(self, func):
         '''
         Sets the callback that will be called after a connection attempt fails,
         an active connection gets closed or the connection gets lost.
-        The current DolphinWatch instance will be submitted as parameter.
-        The a DisconnectReason enum will be the second parameter.
-        Is initially None, and can again be assigned to None.
+        A DisconnectReason enum will be the parameter.
+        Callback is initially None, and can again be assigned to None.
         '''
         if not hasattr(func, '__call__'):
-            raise ArgumentError("onDisconnect lambda must be callable.")
+            raise ArgumentError("onDisconnect callback must be callable.")
         self._dcFunc = func
+        
+    def onLoadError(self, func):
+        '''
+        Sets the callback that will be called when a savestate loading error occured.
+        The filename will be the parameter.
+        Callback is initially None, and can again be assigned to None.
+        '''
+        if not hasattr(func, '__call__'):
+            raise ArgumentError("onError callback must be callable.")
+        self._leFunc = func
         
     def startBatch(self):
         '''
@@ -122,6 +131,9 @@ class DolphinWatch(object):
         '''
         self._sep = "\n"
         self._cmd("")
+        
+    def volume(self, v):
+        self._cmd("VOLUME %d" % v)
 
     def write(self, mode, addr, val):
         '''
@@ -188,7 +200,7 @@ class DolphinWatch(object):
         Sends a command to send back 16 bytes of data at the given address.
         The given callback function gets called with the returned value as parameter. 
         '''
-        self.read(16, addr)
+        self.read(16, addr, callback)
         
     def read32(self, addr, callback):
         '''
@@ -197,7 +209,7 @@ class DolphinWatch(object):
         '''
         if addr%4 != 0:
             raise ArgumentError("Read32 address must be whole word; multiple of 4")
-        self.read(32, addr)
+        self.read(32, addr, callback)
     
     def subscribe8(self, addr, callback):
         '''
@@ -304,12 +316,15 @@ class DolphinWatch(object):
                 callback[0](data)
             else:
                 print("No recipient for address 0x%x, data %s" % (addr, data))
-            
+        elif parts[0] == "FAILLOAD":
+            filename = " ".join(parts[1:])
+            if self._leFunc:
+                self._leFunc(filename)
         else:
-            print("Unknown DolphinMem Command: "+line)
+            print("Unknown DolphinWatch Command: "+line)
     
     def _recv(self):
-        while (self._connected):
+        while self._connected:
             try:
                 data = self._sock.recv(1024)
                 if not data:
@@ -322,10 +337,12 @@ class DolphinWatch(object):
                 self._disconnect(DisconnectReason.CONNECTION_LOST)
                 return
             buf = StringIO(self._buf)
+            end = 0
             for line in buf:
                 if not line.endswith("\n"):
-                    break;
+                    break
                 self._process(line.strip())
-            self._buf = self._buf[buf.tell():]
+                end = buf.tell()
+            self._buf = self._buf[end:]
         
 
