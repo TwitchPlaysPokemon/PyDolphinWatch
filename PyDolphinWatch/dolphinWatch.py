@@ -14,6 +14,7 @@ import gevent, socket
 from _ctypes import ArgumentError
 from StringIO import StringIO
 from util import enum
+from gevent.event import AsyncResult
 
 DisconnectReason = enum(
     CONNECTION_CLOSED_BY_PEER = 1,
@@ -37,10 +38,11 @@ class DolphinWatch(object):
         self._sock = None
         self._cFunc = None
         self._dcFunc = None
-        self._leFunc = None
         self._callbacks = {}
         self._buf = ""
         self._sep = "\n"
+        self._feedback = AsyncResult()
+        self._feedback.set(None)
         
     def isConnected(self):
         '''
@@ -61,8 +63,8 @@ class DolphinWatch(object):
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.connect((self.host, self.port))
             print("DolphinWatch connection to %s:%d established! Ready for work!" % (self.host, self.port))
-            if self._cFunc: self._cFunc(self)
             gevent.spawn(self._recv)
+            if self._cFunc: self._cFunc(self)
         except socket.error:
             print("DolphinWatch connection to %s:%d failed." % (self.host, self.port))
             self._disconnect(DisconnectReason.CONNECTION_FAILED)
@@ -78,6 +80,7 @@ class DolphinWatch(object):
         if not self._connected:
             return
         self._connected = False
+        self._feedback.set(False)
         try:
             self._sock.close()
         except:
@@ -106,16 +109,6 @@ class DolphinWatch(object):
             raise ArgumentError("onDisconnect callback must be callable.")
         self._dcFunc = func
         
-    def onLoadError(self, func):
-        '''
-        Sets the callback that will be called when a savestate loading error occured.
-        The filename will be the parameter.
-        Callback is initially None, and can again be assigned to None.
-        '''
-        if not hasattr(func, '__call__'):
-            raise ArgumentError("onError callback must be callable.")
-        self._leFunc = func
-        
     def startBatch(self):
         '''
         Call this function to send following commands in a batch.
@@ -141,6 +134,12 @@ class DolphinWatch(object):
         <mode> must be 8, 16 or 32.
         '''
         self._cmd("WRITE %d %d %d" % (mode, addr, val))
+        
+    def writeMulti(self, addr, vals):
+        '''
+        Sends a command to write the bytes <vals>, starting at address <addr>.
+        '''
+        self._cmd("WRITE_MULTI %d %s" % (addr, " ".join(str(v) for v in vals)))
         
     def read(self, mode, addr, callback):
         '''
@@ -276,17 +275,32 @@ class DolphinWatch(object):
     def load(self, filename):
         '''
         Tells Dolphin to load the savestate located at <filename>.
+        This function will block until feedback as arrived
+        and will then return true if it succeded, else false.
+        CAUTION: Will permanently block if dolphin was paused :(
         '''
         if ":?\"<> | " in filename:
             raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
-        self._cmd("LOAD %s" % filename)
+        return self._cmd("LOAD %s" % filename, True)
         
     ################### private stuff ###################
     
-    def _cmd(self, cmd):
+    def _cmd(self, cmd, feedback=False):
         if not self._connected:
-            raise socket.error("DolphinWatch is not _connected and therefore cannot perform actions!")
-        self._sock.send(bytes(cmd + self._sep))
+            raise socket.error("DolphinWatch is not connected and therefore cannot perform actions!")
+        if feedback:
+            try:
+                self._feedback.wait(1.0)
+            except gevent.Timeout:
+                pass
+                # TODO got locked up :(
+            self._feedback = AsyncResult()
+            self._sock.send(bytes(cmd + self._sep))
+            r = self._feedback.get(True)
+            return r
+        else:
+            self._sock.send(bytes(cmd + self._sep))
+            return True
     
     def _reg_callback(self, addr, func, _subscribe=False):
         self._callbacks[addr] = (func, _subscribe)
@@ -316,10 +330,10 @@ class DolphinWatch(object):
                 callback[0](data)
             else:
                 print("No recipient for address 0x%x, data %s" % (addr, data))
-        elif parts[0] == "FAILLOAD":
-            filename = " ".join(parts[1:])
-            if self._leFunc:
-                self._leFunc(filename)
+        elif parts[0] == "FAIL":
+            self._feedback.set(False)
+        elif parts[0] == "SUCCESS":
+            self._feedback.set(True)
         else:
             print("Unknown DolphinWatch Command: "+line)
     
