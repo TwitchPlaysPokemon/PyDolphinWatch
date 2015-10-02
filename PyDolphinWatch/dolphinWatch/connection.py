@@ -250,7 +250,13 @@ class DolphinConnection(object):
         Sends 16 bit of data representing some buttonstates of the Wiimote.
         see http://wiibrew.org/wiki/Wiimote#Buttons for more info
         '''
-        self._cmd("BUTTONSTATES %d %d" % (wiimoteIndex, buttonstates))
+        self._cmd("BUTTONSTATES_WII %d %d" % (wiimoteIndex, buttonstates))
+        
+    def gcButton(self, gcpadIndex, buttonstates, stickX=0.0, stickY=0.0, substickX=0.0, substickY=0.0):
+        '''
+        Sends 16 bit of data representing some buttonstates of the GCPad.
+        '''
+        self._cmd("BUTTONSTATES_GC %d %d %f %f %f %f" % (gcpadIndex, buttonstates, stickX, stickY, substickX, substickY))
         
     def pause(self):
         '''
@@ -264,6 +270,12 @@ class DolphinConnection(object):
         Tells Dolphin to resume the current emulation.
         '''
         self._cmd("RESUME")
+        
+    def reset(self):
+        '''
+        Tells Dolphin to push the reset button.
+        '''
+        self._cmd("RESET")
         
     def save(self, filename):
         '''
