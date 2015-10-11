@@ -127,6 +127,10 @@ class DolphinConnection(object):
         self._cmd("")
         
     def volume(self, v):
+        '''
+        Sets Dolphin's Audio.
+        :param v: 0-100, audio level
+        '''
         self._cmd("VOLUME %d" % v)
 
     def write(self, mode, addr, val):
@@ -248,13 +252,24 @@ class DolphinConnection(object):
     def wiiButton(self, wiimoteIndex, buttonstates):
         '''
         Sends 16 bit of data representing some buttonstates of the Wiimote.
-        see http://wiibrew.org/wiki/Wiimote#Buttons for more info
+        NOTE: The real or emulated wiimote dolphin uses gets hijacked for only roughly half a second.
+              After this time that wiimote handled by dolphin starts to send it's buttonstates again.
+        :param wiimoteIndex: 0-3, index of the wiimote to emulate.
+        :param buttonstates: bitmask of the buttonstates, see http://wiibrew.org/wiki/Wiimote#Buttons for more info
         '''
         self._cmd("BUTTONSTATES_WII %d %d" % (wiimoteIndex, buttonstates))
         
     def gcButton(self, gcpadIndex, buttonstates, stickX=0.0, stickY=0.0, substickX=0.0, substickY=0.0):
         '''
-        Sends 16 bit of data representing some buttonstates of the GCPad.
+        Sends 16 bit of data and 2 floats representing some buttonstates of the GCPad.
+        NOTE: The real or emulated gcpad dolphin uses gets hijacked for only roughly half a second.
+              After this time that gcpad handled by dolphin starts to send it's buttonstates again.
+        :param gcpadIndex: 0-3, index of the gcpad to emulate.
+        :param buttonstates: bitmask of the buttonstates, see http://pastebin.com/raw.php?i=4txWae07 for more info
+        :param stickX: between -1.0 and 1.0, x-position of the main stick, 0 is neutral
+        :param stickY: between -1.0 and 1.0, y-position of the main stick, 0 is neutral
+        :param substickX: between -1.0 and 1.0, x-position of the c-stick, 0 is neutral
+        :param substickY: between -1.0 and 1.0, y-position of the c-stick, 0 is neutral
         '''
         self._cmd("BUTTONSTATES_GC %d %d %f %f %f %f" % (gcpadIndex, buttonstates, stickX, stickY, substickX, substickY))
         
@@ -281,7 +296,7 @@ class DolphinConnection(object):
         '''
         Tells Dolphin to make a savestate and save it to <filename>.
         '''
-        if ":?\"<> | " in filename:
+        if any(c in filename for c in "?\"<>|"):
             raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
         self._cmd("SAVE %s" % filename)
         
@@ -292,9 +307,27 @@ class DolphinConnection(object):
         and will then return true if it succeded, else false.
         CAUTION: Will permanently block if dolphin was paused :(
         '''
-        if ":?\"<> | " in filename:
-            raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
+        if any(c in filename for c in "?\"<>|"):
+            raise ArgumentError("filename must not contain any of the following: ?\"<> | ")
         return self._cmd("LOAD %s" % filename, True)
+    
+    def stop(self):
+        '''
+        Stops the current emulation. DolphinWatch does NOT support starting a new game then.
+        To change the game, use insert() to insert a new iso and then reset().
+        '''
+        self._cmd("STOP")
+        
+    def insert(self, filename):
+        '''
+        Inserts up a new game (iso).
+        :param filename: The file (iso e.g.) to be loaded. Relative do dolphin.
+        CAUTION: Running games can crash if the iso changes while running.
+        To change a game, pause, then insert, and after a bit reset the game.
+        '''
+        if any(c in filename for c in "?\"<>|"):
+            raise ArgumentError("filename must not contain any of the following: ?\"<> | ")
+        self._cmd("INSERT %s" % filename)
         
     ################### private stuff ###################
     

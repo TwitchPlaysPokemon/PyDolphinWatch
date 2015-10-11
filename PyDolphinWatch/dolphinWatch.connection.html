@@ -1,0 +1,182 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module dolphinWatch.connection</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="dolphinWatch.html"><font color="#ffffff">dolphinWatch</font></a>.connection</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///G:/projekte/git/pydolphinwatch/pydolphinwatch/dolphinwatch/connection.py">g:\projekte\git\pydolphinwatch\pydolphinwatch\dolphinwatch\connection.py</a></font></td></tr></table>
+    <p><tt>Implementation&nbsp;of&nbsp;the&nbsp;own&nbsp;<a href="#DolphinConnection">DolphinConnection</a>&nbsp;Protocol<br>
+(see&nbsp;https://github.com/ProjectRevoTPP/dolphin).<br>
+&nbsp;<br>
+Is&nbsp;based&nbsp;on&nbsp;virtual&nbsp;coroutines&nbsp;using&nbsp;gevent.<br>
+&nbsp;<br>
+@author:&nbsp;Felk</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="gevent.html">gevent</a><br>
+</td><td width="25%" valign=top><a href="gevent.monkey.html">gevent.monkey</a><br>
+</td><td width="25%" valign=top><a href="socket.html">socket</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="dolphinWatch.connection.html#DolphinConnection">DolphinConnection</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DolphinConnection">class <strong>DolphinConnection</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DolphinConnection-__init__"><strong>__init__</strong></a>(self, host<font color="#909090">='localhost'</font>, port<font color="#909090">=6000</font>)</dt><dd><tt>Creating&nbsp;a&nbsp;new&nbsp;<a href="#DolphinConnection">DolphinConnection</a>&nbsp;instance,<br>
+pointing&nbsp;to&nbsp;the&nbsp;<a href="#DolphinConnection">DolphinConnection</a>&nbsp;Server&nbsp;specified&nbsp;by&nbsp;host&nbsp;and&nbsp;port.<br>
+The&nbsp;connection&nbsp;must&nbsp;be&nbsp;established&nbsp;explicitly&nbsp;with&nbsp;<a href="#DolphinConnection-connect">connect</a>().<br>
+&nbsp;<br>
+host&nbsp;and&nbsp;port&nbsp;can&nbsp;be&nbsp;overwritten,&nbsp;followed&nbsp;by&nbsp;another&nbsp;<a href="#DolphinConnection-connect">connect</a>()&nbsp;call&nbsp;to&nbsp;reconnect.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-connect"><strong>connect</strong></a>(self)</dt><dd><tt>Tries&nbsp;to&nbsp;establish&nbsp;a&nbsp;connection&nbsp;to&nbsp;the&nbsp;server.<br>
+If&nbsp;it&nbsp;succeeds,&nbsp;the&nbsp;onConnect&nbsp;callback&nbsp;will&nbsp;be&nbsp;called.<br>
+If&nbsp;it&nbsp;fails,&nbsp;the&nbsp;onDisconnect&nbsp;callback&nbsp;will&nbsp;be&nbsp;called.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-disconnect"><strong>disconnect</strong></a>(self)</dt><dd><tt>Disconnects&nbsp;the&nbsp;socket&nbsp;from&nbsp;the&nbsp;server.<br>
+The&nbsp;onDisconnect&nbsp;callback&nbsp;will&nbsp;be&nbsp;called&nbsp;with&nbsp;CONNECTION_CLOSED_BY_HOST</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-endBatch"><strong>endBatch</strong></a>(self)</dt><dd><tt>Ends&nbsp;the&nbsp;batch&nbsp;started&nbsp;with&nbsp;<a href="#DolphinConnection-startBatch">startBatch</a>().<br>
+All&nbsp;buffered&nbsp;commands&nbsp;gets&nbsp;executed&nbsp;now&nbsp;and&nbsp;no&nbsp;more&nbsp;buffering&nbsp;is&nbsp;done.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-gcButton"><strong>gcButton</strong></a>(self, gcpadIndex, buttonstates, stickX<font color="#909090">=0.0</font>, stickY<font color="#909090">=0.0</font>, substickX<font color="#909090">=0.0</font>, substickY<font color="#909090">=0.0</font>)</dt><dd><tt>Sends&nbsp;16&nbsp;bit&nbsp;of&nbsp;data&nbsp;and&nbsp;2&nbsp;floats&nbsp;representing&nbsp;some&nbsp;buttonstates&nbsp;of&nbsp;the&nbsp;GCPad.<br>
+NOTE:&nbsp;The&nbsp;real&nbsp;or&nbsp;emulated&nbsp;gcpad&nbsp;dolphin&nbsp;uses&nbsp;gets&nbsp;hijacked&nbsp;for&nbsp;only&nbsp;roughly&nbsp;half&nbsp;a&nbsp;second.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;After&nbsp;this&nbsp;time&nbsp;that&nbsp;gcpad&nbsp;handled&nbsp;by&nbsp;dolphin&nbsp;starts&nbsp;to&nbsp;send&nbsp;it's&nbsp;buttonstates&nbsp;again.<br>
+:param&nbsp;gcpadIndex:&nbsp;0-3,&nbsp;index&nbsp;of&nbsp;the&nbsp;gcpad&nbsp;to&nbsp;emulate.<br>
+:param&nbsp;buttonstates:&nbsp;bitmask&nbsp;of&nbsp;the&nbsp;buttonstates,&nbsp;see&nbsp;<a href="http://pastebin.com/raw.php?i=4txWae07">http://pastebin.com/raw.php?i=4txWae07</a>&nbsp;for&nbsp;more&nbsp;info<br>
+:param&nbsp;stickX:&nbsp;between&nbsp;-1.0&nbsp;and&nbsp;1.0,&nbsp;x-position&nbsp;of&nbsp;the&nbsp;main&nbsp;stick,&nbsp;0&nbsp;is&nbsp;neutral<br>
+:param&nbsp;stickY:&nbsp;between&nbsp;-1.0&nbsp;and&nbsp;1.0,&nbsp;y-position&nbsp;of&nbsp;the&nbsp;main&nbsp;stick,&nbsp;0&nbsp;is&nbsp;neutral<br>
+:param&nbsp;substickX:&nbsp;between&nbsp;-1.0&nbsp;and&nbsp;1.0,&nbsp;x-position&nbsp;of&nbsp;the&nbsp;c-stick,&nbsp;0&nbsp;is&nbsp;neutral<br>
+:param&nbsp;substickY:&nbsp;between&nbsp;-1.0&nbsp;and&nbsp;1.0,&nbsp;y-position&nbsp;of&nbsp;the&nbsp;c-stick,&nbsp;0&nbsp;is&nbsp;neutral</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-insert"><strong>insert</strong></a>(self, filename)</dt><dd><tt>Inserts&nbsp;up&nbsp;a&nbsp;new&nbsp;game&nbsp;(iso).<br>
+:param&nbsp;filename:&nbsp;The&nbsp;file&nbsp;(iso&nbsp;e.g.)&nbsp;to&nbsp;be&nbsp;loaded.&nbsp;Relative&nbsp;do&nbsp;dolphin.<br>
+CAUTION:&nbsp;Running&nbsp;games&nbsp;can&nbsp;crash&nbsp;if&nbsp;the&nbsp;iso&nbsp;changes&nbsp;while&nbsp;running.<br>
+To&nbsp;change&nbsp;a&nbsp;game,&nbsp;pause,&nbsp;then&nbsp;insert,&nbsp;and&nbsp;after&nbsp;a&nbsp;bit&nbsp;reset&nbsp;the&nbsp;game.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-isConnected"><strong>isConnected</strong></a>(self)</dt><dd><tt>Returns&nbsp;whether&nbsp;the&nbsp;<a href="#DolphinConnection">DolphinConnection</a>&nbsp;instance&nbsp;is&nbsp;connected&nbsp;to&nbsp;the<br>
+corresponding&nbsp;server&nbsp;defined&nbsp;by&nbsp;host&nbsp;and&nbsp;port.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-load"><strong>load</strong></a>(self, filename)</dt><dd><tt>Tells&nbsp;Dolphin&nbsp;to&nbsp;load&nbsp;the&nbsp;savestate&nbsp;located&nbsp;at&nbsp;&lt;filename&gt;.<br>
+This&nbsp;function&nbsp;will&nbsp;block&nbsp;until&nbsp;feedback&nbsp;as&nbsp;arrived<br>
+and&nbsp;will&nbsp;then&nbsp;return&nbsp;true&nbsp;if&nbsp;it&nbsp;succeded,&nbsp;else&nbsp;false.<br>
+CAUTION:&nbsp;Will&nbsp;permanently&nbsp;block&nbsp;if&nbsp;dolphin&nbsp;was&nbsp;paused&nbsp;:(</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-onConnect"><strong>onConnect</strong></a>(self, func)</dt><dd><tt>Sets&nbsp;the&nbsp;callback&nbsp;that&nbsp;will&nbsp;be&nbsp;called&nbsp;after&nbsp;a&nbsp;connection<br>
+has&nbsp;been&nbsp;successfully&nbsp;established.<br>
+Callback&nbsp;is&nbsp;initially&nbsp;None,&nbsp;and&nbsp;can&nbsp;again&nbsp;be&nbsp;assigned&nbsp;to&nbsp;None.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-onDisconnect"><strong>onDisconnect</strong></a>(self, func)</dt><dd><tt>Sets&nbsp;the&nbsp;callback&nbsp;that&nbsp;will&nbsp;be&nbsp;called&nbsp;after&nbsp;a&nbsp;connection&nbsp;attempt&nbsp;fails,<br>
+an&nbsp;active&nbsp;connection&nbsp;gets&nbsp;closed&nbsp;or&nbsp;the&nbsp;connection&nbsp;gets&nbsp;lost.<br>
+A&nbsp;DisconnectReason&nbsp;enum&nbsp;will&nbsp;be&nbsp;the&nbsp;parameter.<br>
+Callback&nbsp;is&nbsp;initially&nbsp;None,&nbsp;and&nbsp;can&nbsp;again&nbsp;be&nbsp;assigned&nbsp;to&nbsp;None.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-pause"><strong>pause</strong></a>(self)</dt><dd><tt>Tells&nbsp;Dolphin&nbsp;to&nbsp;pause&nbsp;the&nbsp;current&nbsp;emulation.<br>
+Resume&nbsp;with&nbsp;<a href="#DolphinConnection-resume">resume</a>()</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-read"><strong>read</strong></a>(self, mode, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;&lt;mode&gt;&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.<br>
+&lt;mode&gt;&nbsp;must&nbsp;be&nbsp;8,&nbsp;16&nbsp;or&nbsp;32.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-read16"><strong>read16</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;16&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-read32"><strong>read32</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;32&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-read8"><strong>read8</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;8&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-reset"><strong>reset</strong></a>(self)</dt><dd><tt>Tells&nbsp;Dolphin&nbsp;to&nbsp;push&nbsp;the&nbsp;reset&nbsp;button.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-resume"><strong>resume</strong></a>(self)</dt><dd><tt>Tells&nbsp;Dolphin&nbsp;to&nbsp;resume&nbsp;the&nbsp;current&nbsp;emulation.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-save"><strong>save</strong></a>(self, filename)</dt><dd><tt>Tells&nbsp;Dolphin&nbsp;to&nbsp;make&nbsp;a&nbsp;savestate&nbsp;and&nbsp;save&nbsp;it&nbsp;to&nbsp;&lt;filename&gt;.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-startBatch"><strong>startBatch</strong></a>(self)</dt><dd><tt>Call&nbsp;this&nbsp;function&nbsp;to&nbsp;send&nbsp;following&nbsp;commands&nbsp;in&nbsp;a&nbsp;batch.<br>
+All&nbsp;following&nbsp;commands&nbsp;are&nbsp;guaranteed&nbsp;to&nbsp;be&nbsp;executed&nbsp;at&nbsp;once&nbsp;in&nbsp;Dolphin.<br>
+Is&nbsp;done&nbsp;by&nbsp;buffering&nbsp;and&nbsp;not&nbsp;executing&nbsp;anything&nbsp;until&nbsp;<a href="#DolphinConnection-endBatch">endBatch</a>()&nbsp;is&nbsp;called.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stops&nbsp;the&nbsp;current&nbsp;emulation.&nbsp;DolphinWatch&nbsp;does&nbsp;NOT&nbsp;support&nbsp;starting&nbsp;a&nbsp;new&nbsp;game&nbsp;then.<br>
+To&nbsp;change&nbsp;the&nbsp;game,&nbsp;use&nbsp;<a href="#DolphinConnection-insert">insert</a>()&nbsp;to&nbsp;insert&nbsp;a&nbsp;new&nbsp;iso&nbsp;and&nbsp;then&nbsp;<a href="#DolphinConnection-reset">reset</a>().</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-subscribe16"><strong>subscribe16</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;16&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address,<br>
+repeating&nbsp;each&nbsp;time&nbsp;the&nbsp;value&nbsp;changes.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-subscribe32"><strong>subscribe32</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;32&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address,<br>
+repeating&nbsp;each&nbsp;time&nbsp;the&nbsp;value&nbsp;changes.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-subscribe8"><strong>subscribe8</strong></a>(self, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;8&nbsp;bytes&nbsp;of&nbsp;data&nbsp;at&nbsp;the&nbsp;given&nbsp;address,<br>
+repeating&nbsp;each&nbsp;time&nbsp;the&nbsp;value&nbsp;changes.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;value&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-subscribeMulti"><strong>subscribeMulti</strong></a>(self, size, addr, callback)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;send&nbsp;back&nbsp;&lt;size&gt;&nbsp;bytes&nbsp;of&nbsp;data&nbsp;starting&nbsp;at&nbsp;the&nbsp;given&nbsp;address,<br>
+repeating&nbsp;each&nbsp;time&nbsp;any&nbsp;value&nbsp;changes.&nbsp;Useful&nbsp;for&nbsp;strings&nbsp;or&nbsp;arrays.<br>
+The&nbsp;given&nbsp;callback&nbsp;function&nbsp;gets&nbsp;called&nbsp;with&nbsp;the&nbsp;returned&nbsp;values&nbsp;in&nbsp;a&nbsp;list&nbsp;as&nbsp;parameter.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-volume"><strong>volume</strong></a>(self, v)</dt><dd><tt>Sets&nbsp;Dolphin's&nbsp;Audio.<br>
+:param&nbsp;v:&nbsp;0-100,&nbsp;audio&nbsp;level</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-wiiButton"><strong>wiiButton</strong></a>(self, wiimoteIndex, buttonstates)</dt><dd><tt>Sends&nbsp;16&nbsp;bit&nbsp;of&nbsp;data&nbsp;representing&nbsp;some&nbsp;buttonstates&nbsp;of&nbsp;the&nbsp;Wiimote.<br>
+NOTE:&nbsp;The&nbsp;real&nbsp;or&nbsp;emulated&nbsp;wiimote&nbsp;dolphin&nbsp;uses&nbsp;gets&nbsp;hijacked&nbsp;for&nbsp;only&nbsp;roughly&nbsp;half&nbsp;a&nbsp;second.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;After&nbsp;this&nbsp;time&nbsp;that&nbsp;wiimote&nbsp;handled&nbsp;by&nbsp;dolphin&nbsp;starts&nbsp;to&nbsp;send&nbsp;it's&nbsp;buttonstates&nbsp;again.<br>
+:param&nbsp;wiimoteIndex:&nbsp;0-3,&nbsp;index&nbsp;of&nbsp;the&nbsp;wiimote&nbsp;to&nbsp;emulate.<br>
+:param&nbsp;buttonstates:&nbsp;bitmask&nbsp;of&nbsp;the&nbsp;buttonstates,&nbsp;see&nbsp;<a href="http://wiibrew.org/wiki/Wiimote#Buttons">http://wiibrew.org/wiki/Wiimote#Buttons</a>&nbsp;for&nbsp;more&nbsp;info</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-write"><strong>write</strong></a>(self, mode, addr, val)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;write&nbsp;&lt;mode&gt;&nbsp;bytes&nbsp;of&nbsp;data&nbsp;to&nbsp;the&nbsp;given&nbsp;address.<br>
+&lt;mode&gt;&nbsp;must&nbsp;be&nbsp;8,&nbsp;16&nbsp;or&nbsp;32.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-write16"><strong>write16</strong></a>(self, addr, val)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;write&nbsp;16&nbsp;bytes&nbsp;of&nbsp;data&nbsp;to&nbsp;the&nbsp;given&nbsp;address.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-write32"><strong>write32</strong></a>(self, addr, val)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;write&nbsp;32&nbsp;bytes&nbsp;of&nbsp;data&nbsp;to&nbsp;the&nbsp;given&nbsp;address.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-write8"><strong>write8</strong></a>(self, addr, val)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;write&nbsp;8&nbsp;bytes&nbsp;of&nbsp;data&nbsp;to&nbsp;the&nbsp;given&nbsp;address.</tt></dd></dl>
+
+<dl><dt><a name="DolphinConnection-writeMulti"><strong>writeMulti</strong></a>(self, addr, vals)</dt><dd><tt>Sends&nbsp;a&nbsp;command&nbsp;to&nbsp;write&nbsp;the&nbsp;bytes&nbsp;&lt;vals&gt;,&nbsp;starting&nbsp;at&nbsp;address&nbsp;&lt;addr&gt;.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>division</strong> = _Feature((2, 2, 0, 'alpha', 2), (3, 0, 0, 'alpha', 0), 8192)<br>
+<strong>print_function</strong> = _Feature((2, 6, 0, 'alpha', 2), (3, 0, 0, 'alpha', 0), 65536)</td></tr></table>
+</body></html>
