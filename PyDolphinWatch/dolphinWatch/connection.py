@@ -363,7 +363,7 @@ class DolphinConnection(object):
             if callback:
                 if not callback[1]:
                     self._dereg_callback(addr)
-                callback[0](val)
+                gevent.spawn(callback[0], val)
             else:
                 print("No recipient for address 0x%x, value 0x%x" % (addr, val))
         elif parts[0] == "MEM_MULTI":
@@ -373,7 +373,7 @@ class DolphinConnection(object):
             if callback:
                 if not callback[1]:
                     self._dereg_callback(addr)
-                callback[0](data)
+                gevent.spawn(callback[0], data)
             else:
                 print("No recipient for address 0x%x, data %s" % (addr, data))
         elif parts[0] == "FAIL":
