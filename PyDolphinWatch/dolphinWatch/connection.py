@@ -12,7 +12,6 @@ from gevent import monkey; monkey.patch_socket()
 
 import gevent, socket
 from _ctypes import ArgumentError
-from StringIO import StringIO
 from gevent.event import AsyncResult
 
 from .util import enum
@@ -341,11 +340,11 @@ class DolphinConnection(object):
                 pass
                 # TODO got locked up :(
             self._feedback = AsyncResult()
-            self._sock.send(bytes(cmd + self._sep))
+            self._sock.send((cmd + self._sep).encode())
             r = self._feedback.get(True)
             return r
         else:
-            self._sock.send(bytes(cmd + self._sep))
+            self._sock.send((cmd + self._sep).encode())
             return True
     
     def _reg_callback(self, addr, func, _subscribe=False):
@@ -391,18 +390,14 @@ class DolphinConnection(object):
                     print("DolphinConnection connection closed")
                     self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_PEER)
                     return
-                self._buf += data
+                self._buf += data.decode()
             except socket.error:
                 print("DolphinConnection connection lost")
                 self._disconnect(DisconnectReason.CONNECTION_LOST)
                 return
-            buf = StringIO(self._buf)
-            end = 0
-            for line in buf:
-                if not line.endswith("\n"):
-                    break
+            *lines, rest = self._buf.split("\n")
+            self._buf = rest
+            for line in lines:
                 self._process(line.strip())
-                end = buf.tell()
-            self._buf = self._buf[end:]
         
 

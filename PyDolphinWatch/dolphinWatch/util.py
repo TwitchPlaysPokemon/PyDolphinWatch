@@ -7,6 +7,6 @@ Created on 04.09.2015
 # http://stackoverflow.com/a/1695250/3688648
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
-    reverse = dict((value, key) for key, value in enums.iteritems())
+    reverse = dict((value, key) for key, value in enums.items())
     enums['names'] = reverse
     return type('Enum', (), enums)
