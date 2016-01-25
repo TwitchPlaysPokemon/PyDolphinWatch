@@ -6,6 +6,7 @@ Created on 10.11.2015
 
 from enum import Enum
 
+
 class WiimoteButtons(Enum):
     NONE  = 0x0000
     LEFT  = 0x0001
@@ -13,13 +14,14 @@ class WiimoteButtons(Enum):
     DOWN  = 0x0004
     UP    = 0x0008
     PLUS  = 0x0010
-    
+
     TWO   = 0x0100
     ONE   = 0x0200
     B     = 0x0400
     A     = 0x0800
     MINUS = 0x1000
     HOME  = 0x8000
+
 
 class GCPadButtons(Enum):
     NONE  = 0x0000
@@ -35,6 +37,7 @@ class GCPadButtons(Enum):
     X     = 0x0400
     Y     = 0x0800
     START = 0x1000
+
 
 class GCPadSticks(Enum):
     NONE  = ( 0,  0, 0, 0)

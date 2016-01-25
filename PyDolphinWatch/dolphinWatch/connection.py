@@ -27,14 +27,16 @@ DisconnectReason = enum(
     CONNECTION_FAILED         = 4,
 )
 
+
 class DolphinConnection(object):
     def __init__(self, host="localhost", port=6000):
         '''
         Creating a new DolphinConnection instance,
         pointing to the DolphinConnection Server specified by host and port.
         The connection must be established explicitly with connect().
-        
-        host and port can be overwritten, followed by another connect() call to reconnect.
+
+        host and port can be overwritten, followed by another connect()
+        call to reconnect.
         '''
         self.host = host
         self.port = port
@@ -47,14 +49,14 @@ class DolphinConnection(object):
         self._sep = "\n"
         self._feedback = AsyncResult()
         self._feedback.set(None)
-        
+
     def isConnected(self):
         '''
         Returns whether the DolphinConnection instance is connected to the
         corresponding server defined by host and port.
         '''
         return self._connected
-        
+
     def connect(self):
         '''
         Tries to establish a connection to the server.
@@ -66,20 +68,23 @@ class DolphinConnection(object):
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.connect((self.host, self.port))
-            logger.info("DolphinConnection connection to %s:%d established! Ready for work!", self.host, self.port)
+            logger.info("DolphinConnection connection to %s:%d established! " +
+                        "Ready for work!", self.host, self.port)
             gevent.spawn(self._recv)
-            if self._cFunc: self._cFunc(self)
+            if self._cFunc:
+                self._cFunc(self)
         except socket.error:
-            logger.info("DolphinConnection connection to %s:%d failed.", self.host, self.port)
+            logger.info("DolphinConnection connection to %s:%d failed.",
+                        self.host, self.port)
             self._disconnect(DisconnectReason.CONNECTION_FAILED)
-        
+
     def disconnect(self):
         '''
         Disconnects the socket from the server.
         The onDisconnect callback will be called with CONNECTION_CLOSED_BY_HOST
         '''
         self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_HOST)
-        
+
     def _disconnect(self, reason):
         if not self._connected:
             return
@@ -91,7 +96,7 @@ class DolphinConnection(object):
             pass
         if self._dcFunc:
             self._dcFunc(self, reason)
-            
+
     def onConnect(self, func):
         '''
         Sets the callback that will be called after a connection
@@ -101,7 +106,7 @@ class DolphinConnection(object):
         if not hasattr(func, '__call__'):
             raise ArgumentError("onDisconnect callback must be callable.")
         self._cFunc = func
-        
+
     def onDisconnect(self, func):
         '''
         Sets the callback that will be called after a connection attempt fails,
@@ -112,15 +117,16 @@ class DolphinConnection(object):
         if not hasattr(func, '__call__'):
             raise ArgumentError("onDisconnect callback must be callable.")
         self._dcFunc = func
-        
+
     def startBatch(self):
         '''
         Call this function to send following commands in a batch.
-        All following commands are guaranteed to be executed at once in Dolphin.
-        Is done by buffering and not executing anything until endBatch() is called.
+        All following commands are guaranteed to be executed at once in
+        Dolphin. Is done by buffering and not executing anything until
+        endBatch() is called.
         '''
         self._sep = ";"
-        
+
     def endBatch(self):
         '''
         Ends the batch started with startBatch().
@@ -128,7 +134,7 @@ class DolphinConnection(object):
         '''
         self._sep = "\n"
         self._cmd("")
-        
+
     def volume(self, v):
         '''
         Sets Dolphin's Audio.
@@ -142,167 +148,199 @@ class DolphinConnection(object):
         <mode> must be 8, 16 or 32.
         '''
         self._cmd("WRITE %d %d %d" % (mode, addr, val))
-        
+
     def writeMulti(self, addr, vals):
         '''
         Sends a command to write the bytes <vals>, starting at address <addr>.
         '''
         self._cmd("WRITE_MULTI %d %s" % (addr, " ".join(str(v) for v in vals)))
-        
+
     def read(self, mode, addr, callback):
         '''
         Sends a command to send back <mode> bytes of data at the given address.
-        The given callback function gets called with the returned value as parameter.
+        The given callback function gets called with the returned value as
+        parameter.
         <mode> must be 8, 16 or 32.
         '''
         self._reg_callback(addr, callback, False)
         self._cmd("READ %d %d" % (mode, addr))
-        
+
     def _subscribe(self, mode, addr, callback):
         '''
         Sends a command to send back <mode> bytes of data at the given address,
         repeating each time the value changes.
-        The given callback function gets called with the returned value as parameter.
+        The given callback function gets called with the returned value as
+        parameter.
         <mode> must be 8, 16 or 32.
         '''
         self._reg_callback(addr, callback, True)
         self._cmd("SUBSCRIBE %d %d" % (mode, addr))
-        
+
     def _subscribeMulti(self, size, addr, callback):
         '''
-        Sends a command to send back <size> bytes of data starting at the given address,
+        Sends a command to send back <size> bytes of data starting at the
+        given address,
         repeating each time the value changes. Useful for strings and arrays.
-        The given callback function gets called with the returned values in a list as parameter.
+        The given callback function gets called with the returned values in a
+        list as parameter.
         '''
         self._reg_callback(addr, callback, True)
         self._cmd("SUBSCRIBE_MULTI %d %d" % (size, addr))
-        
+
     def write8(self, addr, val):
         '''
         Sends a command to write 8 bytes of data to the given address.
         '''
         self.write(8, addr, val)
-    
+
     def write16(self, addr, val):
         '''
         Sends a command to write 16 bytes of data to the given address.
         '''
         self.write(16, addr, val)
-    
+
     def write32(self, addr, val):
         '''
         Sends a command to write 32 bytes of data to the given address.
         '''
         self.write(32, addr, val)
-        
+
     def read8(self, addr, callback):
         '''
         Sends a command to send back 8 bytes of data at the given address.
-        The given callback function gets called with the returned value as parameter. 
+        The given callback function gets called with the returned value as
+        parameter.
         '''
         self.read(8, addr, callback)
-        
+
     def read16(self, addr, callback):
         '''
         Sends a command to send back 16 bytes of data at the given address.
-        The given callback function gets called with the returned value as parameter. 
+        The given callback function gets called with the returned value as
+        parameter.
         '''
         self.read(16, addr, callback)
-        
+
     def read32(self, addr, callback):
         '''
         Sends a command to send back 32 bytes of data at the given address.
-        The given callback function gets called with the returned value as parameter. 
+        The given callback function gets called with the returned value as
+        parameter.
         '''
-        if addr%4 != 0:
-            raise ArgumentError("Read32 address must be whole word; multiple of 4")
+        if addr % 4 != 0:
+            raise ArgumentError("Read32 address must be whole word; " +
+                                "multiple of 4")
         self.read(32, addr, callback)
-    
+
     def subscribe8(self, addr, callback):
         '''
         Sends a command to send back 8 bytes of data at the given address,
         repeating each time the value changes.
-        The given callback function gets called with the returned value as parameter.
+        The given callback function gets called with the returned value as
+        parameter.
         '''
         self._subscribe(8, addr, callback)
-        
+
     def subscribe16(self, addr, callback):
         '''
         Sends a command to send back 16 bytes of data at the given address,
         repeating each time the value changes.
-        The given callback function gets called with the returned value as parameter.
+        The given callback function gets called with the returned value as
+        parameter.
         '''
         self._subscribe(16, addr, callback)
-        
+
     def subscribe32(self, addr, callback):
         '''
         Sends a command to send back 32 bytes of data at the given address,
         repeating each time the value changes.
-        The given callback function gets called with the returned value as parameter.
+        The given callback function gets called with the returned value as
+        parameter.
         '''
-        if addr%4 != 0:
-            raise ArgumentError("Read address must be whole word; multiple of 4")
+        if addr % 4 != 0:
+            raise ArgumentError("Read address must be whole word; " +
+                                "multiple of 4")
         self._subscribe(32, addr, callback)
-        
+
     def subscribeMulti(self, size, addr, callback):
         '''
-        Sends a command to send back <size> bytes of data starting at the given address,
+        Sends a command to send back <size> bytes of data starting at the
+        given address,
         repeating each time any value changes. Useful for strings or arrays.
-        The given callback function gets called with the returned values in a list as parameter.
+        The given callback function gets called with the returned values in a
+        list as parameter.
         '''
         self._subscribeMulti(size, addr, callback)
-        
+
     def wiiButton(self, wiimoteIndex, buttonstates):
         '''
         Sends 16 bit of data representing some buttonstates of the Wiimote.
-        NOTE: The real or emulated wiimote dolphin uses gets hijacked for only roughly half a second.
-              After this time that wiimote handled by dolphin starts to send it's buttonstates again.
+        NOTE: The real or emulated wiimote dolphin uses gets hijacked for only
+              roughly half a second.
+              After this time that wiimote handled by dolphin starts to send
+              it's buttonstates again.
         :param wiimoteIndex: 0-3, index of the wiimote to emulate.
-        :param buttonstates: bitmask of the buttonstates, see http://wiibrew.org/wiki/Wiimote#Buttons for more info
+        :param buttonstates: bitmask of the buttonstates,
+            see http://wiibrew.org/wiki/Wiimote#Buttons for more info
         '''
         self._cmd("BUTTONSTATES_WII %d %d" % (wiimoteIndex, buttonstates))
-        
-    def gcButton(self, gcpadIndex, buttonstates, stickX=0.0, stickY=0.0, substickX=0.0, substickY=0.0):
+
+    def gcButton(self, gcpadIndex, buttonstates, stickX=0.0, stickY=0.0,
+                 substickX=0.0, substickY=0.0):
         '''
-        Sends 16 bit of data and 2 floats representing some buttonstates of the GCPad.
-        NOTE: The real or emulated gcpad dolphin uses gets hijacked for only roughly half a second.
-              After this time that gcpad handled by dolphin starts to send it's buttonstates again.
+        Sends 16 bit of data and 2 floats representing some buttonstates of
+        the GCPad.
+        NOTE: The real or emulated gcpad dolphin uses gets hijacked for only
+              roughly half a second.
+              After this time that gcpad handled by dolphin starts to send
+              it's buttonstates again.
         :param gcpadIndex: 0-3, index of the gcpad to emulate.
-        :param buttonstates: bitmask of the buttonstates, see http://pastebin.com/raw.php?i=4txWae07 for more info
-        :param stickX: between -1.0 and 1.0, x-position of the main stick, 0 is neutral
-        :param stickY: between -1.0 and 1.0, y-position of the main stick, 0 is neutral
-        :param substickX: between -1.0 and 1.0, x-position of the c-stick, 0 is neutral
-        :param substickY: between -1.0 and 1.0, y-position of the c-stick, 0 is neutral
+        :param buttonstates: bitmask of the buttonstates,
+            see http://pastebin.com/raw.php?i=4txWae07 for more info
+        :param stickX: between -1.0 and 1.0, x-position of the main stick,
+                       0 is neutral
+        :param stickY: between -1.0 and 1.0, y-position of the main stick,
+                       0 is neutral
+        :param substickX: between -1.0 and 1.0, x-position of the c-stick,
+                          0 is neutral
+        :param substickY: between -1.0 and 1.0, y-position of the c-stick,
+                          0 is neutral
         '''
-        self._cmd("BUTTONSTATES_GC %d %d %f %f %f %f" % (gcpadIndex, buttonstates, stickX, stickY, substickX, substickY))
-        
+        self._cmd("BUTTONSTATES_GC %d %d %f %f %f %f" % (gcpadIndex,
+                                                         buttonstates,
+                                                         stickX,
+                                                         stickY,
+                                                         substickX,
+                                                         substickY))
+
     def pause(self):
         '''
         Tells Dolphin to pause the current emulation.
         Resume with resume()
         '''
         self._cmd("PAUSE")
-        
+
     def resume(self):
         '''
         Tells Dolphin to resume the current emulation.
         '''
         self._cmd("RESUME")
-        
+
     def reset(self):
         '''
         Tells Dolphin to push the reset button.
         '''
         self._cmd("RESET")
-        
+
     def save(self, filename):
         '''
         Tells Dolphin to make a savestate and save it to <filename>.
         '''
         if any(c in filename for c in "?\"<>|"):
-            raise ArgumentError("filename must not contain any of the following: :?\"<> | ")
+            raise ArgumentError("filename must not contain any of the " +
+                                "following: :?\"<> | ")
         self._cmd("SAVE %s" % filename)
-        
+
     def load(self, filename):
         '''
         Tells Dolphin to load the savestate located at <filename>.
@@ -311,16 +349,18 @@ class DolphinConnection(object):
         CAUTION: Will permanently block if dolphin was paused :(
         '''
         if any(c in filename for c in "?\"<>|"):
-            raise ArgumentError("filename must not contain any of the following: ?\"<> | ")
+            raise ArgumentError("filename must not contain any of the " +
+                                "following: ?\"<> | ")
         return self._cmd("LOAD %s" % filename, True)
-    
+
     def stop(self):
         '''
-        Stops the current emulation. DolphinWatch does NOT support starting a new game then.
+        Stops the current emulation. DolphinWatch does NOT support starting a
+        new game then.
         To change the game, use insert() to insert a new iso and then reset().
         '''
         self._cmd("STOP")
-        
+
     def insert(self, filename):
         '''
         Inserts up a new game (iso).
@@ -329,14 +369,17 @@ class DolphinConnection(object):
         To change a game, pause, then insert, and after a bit reset the game.
         '''
         if any(c in filename for c in "?\"<>|"):
-            raise ArgumentError("filename must not contain any of the following: ?\"<> | ")
+            raise ArgumentError("filename must not contain any of the " +
+                                "following: ?\"<> | ")
         self._cmd("INSERT %s" % filename)
-        
-    ################### private stuff ###################
-    
+
+    ######################################
+    # private methods below
+
     def _cmd(self, cmd, feedback=False):
         if not self._connected:
-            raise socket.error("DolphinConnection is not connected and therefore cannot perform actions!")
+            raise socket.error("DolphinConnection is not connected and " +
+                               "therefore cannot perform actions!")
         if feedback:
             try:
                 self._feedback.wait(1.0)
@@ -350,13 +393,13 @@ class DolphinConnection(object):
         else:
             self._sock.send((cmd + self._sep).encode())
             return True
-    
+
     def _reg_callback(self, addr, func, _subscribe=False):
         self._callbacks[addr] = (func, _subscribe)
-        
+
     def _dereg_callback(self, addr):
         self._callbacks.pop(addr)
-        
+
     def _process(self, line):
         parts = line.split(" ")
         if parts[0] == "MEM":
@@ -368,7 +411,8 @@ class DolphinConnection(object):
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], val)
             else:
-                logger.warning("No recipient for address 0x%x, value 0x%x", addr, val)
+                logger.warning("No recipient for address 0x%x, value 0x%x",
+                               addr, val)
         elif parts[0] == "MEM_MULTI":
             addr = int(parts[1])
             data = [int(v) for v in parts[2:]]
@@ -378,14 +422,15 @@ class DolphinConnection(object):
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], data)
             else:
-                logger.warning("No recipient for address 0x%x, data %s", addr, data)
+                logger.warning("No recipient for address 0x%x, data %s",
+                               addr, data)
         elif parts[0] == "FAIL":
             self._feedback.set(False)
         elif parts[0] == "SUCCESS":
             self._feedback.set(True)
         else:
             logger.warning("Unknown incoming DolphinWatch command: %s", line)
-    
+
     def _recv(self):
         while self._connected:
             try:
@@ -403,5 +448,3 @@ class DolphinConnection(object):
             self._buf = rest
             for line in lines:
                 self._process(line.strip())
-        
-
