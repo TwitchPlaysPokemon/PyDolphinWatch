@@ -10,11 +10,15 @@ Is based on virtual coroutines using gevent.
 from __future__ import print_function, division
 from gevent import monkey; monkey.patch_socket()
 
-import gevent, socket
+import gevent
+import socket
+import logging
 from _ctypes import ArgumentError
 from gevent.event import AsyncResult
 
 from .util import enum
+
+logger = logging.getLogger(__name__)
 
 DisconnectReason = enum(
     CONNECTION_CLOSED_BY_PEER = 1,
@@ -62,11 +66,11 @@ class DolphinConnection(object):
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.connect((self.host, self.port))
-            print("DolphinConnection connection to %s:%d established! Ready for work!" % (self.host, self.port))
+            logger.info("DolphinConnection connection to %s:%d established! Ready for work!", self.host, self.port)
             gevent.spawn(self._recv)
             if self._cFunc: self._cFunc(self)
         except socket.error:
-            print("DolphinConnection connection to %s:%d failed." % (self.host, self.port))
+            logger.info("DolphinConnection connection to %s:%d failed.", self.host, self.port)
             self._disconnect(DisconnectReason.CONNECTION_FAILED)
         
     def disconnect(self):
@@ -364,7 +368,7 @@ class DolphinConnection(object):
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], val)
             else:
-                print("No recipient for address 0x%x, value 0x%x" % (addr, val))
+                logger.warning("No recipient for address 0x%x, value 0x%x", addr, val)
         elif parts[0] == "MEM_MULTI":
             addr = int(parts[1])
             data = [int(v) for v in parts[2:]]
@@ -374,25 +378,25 @@ class DolphinConnection(object):
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], data)
             else:
-                print("No recipient for address 0x%x, data %s" % (addr, data))
+                logger.warning("No recipient for address 0x%x, data %s", addr, data)
         elif parts[0] == "FAIL":
             self._feedback.set(False)
         elif parts[0] == "SUCCESS":
             self._feedback.set(True)
         else:
-            print("Unknown DolphinConnection Command: "+line)
+            logger.warning("Unknown incoming DolphinWatch command: %s", line)
     
     def _recv(self):
         while self._connected:
             try:
                 data = self._sock.recv(1024)
                 if not data:
-                    print("DolphinConnection connection closed")
+                    logger.info("DolphinConnection connection closed")
                     self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_PEER)
                     return
                 self._buf += data.decode()
             except socket.error:
-                print("DolphinConnection connection lost")
+                logger.warning("DolphinConnection connection lost")
                 self._disconnect(DisconnectReason.CONNECTION_LOST)
                 return
             *lines, rest = self._buf.split("\n")
