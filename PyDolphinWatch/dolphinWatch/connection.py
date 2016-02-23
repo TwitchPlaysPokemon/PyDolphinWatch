@@ -18,7 +18,8 @@ from gevent.event import AsyncResult
 
 from .util import enum
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphinWatch")
+dolphin_logger = logging.getLogger("dolphin")
 
 DisconnectReason = enum(
     CONNECTION_CLOSED_BY_PEER = 1,
@@ -27,6 +28,13 @@ DisconnectReason = enum(
     CONNECTION_FAILED         = 4,
 )
 
+_log_translation = {
+    1: 20,
+    2: 40,
+    3: 30,
+    4: 20,
+    5: 10,
+}
 
 class DolphinConnection(object):
     def __init__(self, host="localhost", port=6000):
@@ -428,6 +436,9 @@ class DolphinConnection(object):
             self._feedback.set(False)
         elif parts[0] == "SUCCESS":
             self._feedback.set(True)
+        elif parts[0] == "LOG":
+            level = _log_translation[int(parts[1])]
+            dolphin_logger.log(level, " ".join(parts[2:]))
         else:
             logger.warning("Unknown incoming DolphinWatch command: %s", line)
 
