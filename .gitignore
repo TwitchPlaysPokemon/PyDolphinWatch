@@ -57,5 +57,5 @@ docs/_build/
 target/
 
 # custom stuff
-/.pydevproject
-
+.pydevproject
+.project
