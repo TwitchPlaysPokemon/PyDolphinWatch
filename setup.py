@@ -1,9 +1,9 @@
 
-from setuptools import setup
+from setuptools import setup, find_packages
 setup(
     name="dolphinWatch",
     version="0.1",
-    packages=["dolphinWatch"],
+    packages=find_packages(),
     install_requires=['gevent>=1.1'],
 
     author="Felk",
