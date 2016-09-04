@@ -9,6 +9,7 @@ You will need gevent and python3. Once you got that, here's a small example:
 
 ```
 import dolphinWatch
+import gevent
 
 
 dolphin = dolphinWatch.DolphinConnection("localhost", 6000)
@@ -23,4 +24,5 @@ def connected():
 
 dolphin.onConnect(connected)
 dolphin.connect()
+gevent.sleep(1000000)  # whatever is needed for the program not to immediately terminate
 ```
