@@ -59,3 +59,5 @@ target/
 # custom stuff
 .pydevproject
 .project
+.idea
+*.iml
