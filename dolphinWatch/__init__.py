@@ -150,6 +150,13 @@ class DolphinConnection(object):
         '''
         self._cmd("VOLUME %d" % v)
 
+    def speed(self,s):
+        '''
+        Sets Dolphin's emulation speed.
+        :param s: speed as float, 1.0 being normal speed, 0.5 being half speed, etc.
+        '''
+        self._cmd("SPEED %f" % s)
+
     def write(self, mode, addr, val):
         '''
         Sends a command to write <mode> bytes of data to the given address.
