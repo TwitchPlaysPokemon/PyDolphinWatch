@@ -22,10 +22,10 @@ logger = logging.getLogger("dolphinWatch")
 dolphin_logger = logging.getLogger("dolphin")
 
 DisconnectReason = enum(
-    CONNECTION_CLOSED_BY_PEER = 1,
-    CONNECTION_CLOSED_BY_HOST = 2,
-    CONNECTION_LOST           = 3,
-    CONNECTION_FAILED         = 4,
+    CONNECTION_CLOSED_BY_PEER  = 1,
+    CONNECTION_CLOSED_BY_HOST  = 2,
+    CONNECTION_LOST            = 3,
+    CONNECTION_NOT_ESTABLISHED = 4,
 )
 
 _log_translation = {
@@ -67,7 +67,8 @@ class DolphinConnection(object):
 
     def connect(self):
         '''
-        Tries to establish a connection to the server.
+        Tries to establish a new connection to the server. Disconnects any existing
+        connection first.
         If it succeeds, the onConnect callback will be called.
         If it fails, the onDisconnect callback will be called.
         '''
@@ -84,14 +85,18 @@ class DolphinConnection(object):
         except socket.error:
             logger.info("DolphinConnection connection to %s:%d failed.",
                         self.host, self.port)
-            self._disconnect(DisconnectReason.CONNECTION_FAILED)
+            self._disconnect(DisconnectReason.CONNECTION_NOT_ESTABLISHED)
 
     def disconnect(self):
         '''
-        Disconnects the socket from the server.
+        Disconnects an existing socket connection from the server, if any.
         The onDisconnect callback will be called with CONNECTION_CLOSED_BY_HOST
         '''
-        self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_HOST)
+        if self._connected:
+            logger.info("DolphinConnection connection closed by host.")
+            self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_HOST)
+        else:
+            logger.info("DolphinConnection connection is already closed.")
 
     def _disconnect(self, reason):
         if not self._connected:
@@ -201,6 +206,28 @@ class DolphinConnection(object):
         '''
         self._reg_callback(addr, callback, True)
         self._cmd("SUBSCRIBE_MULTI %d %d" % (size, addr))
+
+    def _unSubscribe(self, addr):
+        '''
+        Sends a command to send back <mode> bytes of data at the given address,
+        repeating each time the value changes.
+        The given callback function gets called with the returned value as
+        parameter.
+        <mode> must be 8, 16 or 32.
+        '''
+        self._dereg_callback(addr)
+        self._cmd("UNSUBSCRIBE %d " % (addr))
+
+    def _unSubscribeMulti(self, size, addr, callback):
+        '''
+        Sends a command to send back <size> bytes of data starting at the
+        given address,
+        repeating each time the value changes. Useful for strings and arrays.
+        The given callback function gets called with the returned values in a
+        list as parameter.
+        '''
+        self._dereg_callback(addr)
+        self._cmd("UNSUBSCRIBE_MULTI %d" % (addr))
 
     def write8(self, addr, val):
         '''
@@ -417,12 +444,20 @@ class DolphinConnection(object):
 
     def _process(self, line):
         parts = line.split(" ")
+        dstrlist = []
+        for part in parts:
+            try:
+                dstrlist.append("{:02X}".format(int(part)))
+            except:
+                dstrlist.append(part)
+        logger.debug("Received: %s" % " ".join(dstrlist))  # TODO: debugging code, remove?
         if parts[0] == "MEM":
             addr = int(parts[1])
             val = int(parts[2])
             callback = self._callbacks.get(addr)
             if callback:
                 if not callback[1]:
+                    # We only wanted to read this value once, not subscribe to it.
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], val)
             else:
@@ -434,6 +469,7 @@ class DolphinConnection(object):
             callback = self._callbacks.get(addr)
             if callback:
                 if not callback[1]:
+                    # We only wanted to read this value once, not subscribe to it.
                     self._dereg_callback(addr)
                 gevent.spawn(callback[0], data)
             else:
@@ -450,16 +486,17 @@ class DolphinConnection(object):
             logger.warning("Unknown incoming DolphinWatch command: %s", line)
 
     def _recv(self):
+        """Listen for incoming data from Dolphin"""
         while self._connected:
             try:
                 data = self._sock.recv(1024)
                 if not data:
-                    logger.info("DolphinConnection connection closed")
+                    logger.info("DolphinConnection connection closed by peer.")
                     self._disconnect(DisconnectReason.CONNECTION_CLOSED_BY_PEER)
                     return
                 self._buf += data.decode()
             except socket.error:
-                logger.warning("DolphinConnection connection lost")
+                logger.warning("DolphinConnection connection lost.")
                 self._disconnect(DisconnectReason.CONNECTION_LOST)
                 return
             *lines, rest = self._buf.split("\n")
