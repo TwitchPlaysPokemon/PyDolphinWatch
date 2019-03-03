@@ -19,7 +19,7 @@ from .buttons import *
 from .util import enum
 
 logger = logging.getLogger("dolphinWatch")
-dolphin_logger = logging.getLogger("dolphin")
+logger_verbose = logging.getLogger("dolphinWatch.verbose")
 
 DisconnectReason = enum(
     CONNECTION_CLOSED_BY_PEER  = 1,
@@ -450,7 +450,7 @@ class DolphinConnection(object):
                 dstrlist.append("{:02X}".format(int(part)))
             except:
                 dstrlist.append(part)
-        logger.debug("Received: %s" % " ".join(dstrlist))  # TODO: debugging code, remove?
+        logger_verbose.debug("Received: %s" % " ".join(dstrlist))
         if parts[0] == "MEM":
             addr = int(parts[1])
             val = int(parts[2])
@@ -481,7 +481,7 @@ class DolphinConnection(object):
             self._feedback.set(True)
         elif parts[0] == "LOG":
             level = _log_translation[int(parts[1])]
-            dolphin_logger.log(level, " ".join(parts[2:]))
+            logger.log(level, " ".join(parts[2:]))
         else:
             logger.warning("Unknown incoming DolphinWatch command: %s", line)
 
