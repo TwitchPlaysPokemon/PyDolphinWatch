@@ -36,6 +36,20 @@ _log_translation = {
     5: 10,
 }
 
+
+class DolphinNotConnected(socket.error):
+    pass
+
+
+def _logOnException(greenlet):
+    try:
+        greenlet.get()
+    except DolphinNotConnected:
+        logger.debug("Exception raised to dolphin callback", exc_info=True)
+    except Exception:
+        logger.exception("Exception raised to dolphin callback")
+
+
 class DolphinConnection(object):
     def __init__(self, host="localhost", port=6000):
         '''
@@ -420,8 +434,8 @@ class DolphinConnection(object):
 
     def _cmd(self, cmd, feedback=False):
         if not self._connected:
-            raise socket.error("DolphinConnection is not connected and " +
-                               "therefore cannot perform actions!")
+            raise DolphinNotConnected("DolphinConnection is not connected and " +
+                                      "therefore cannot perform actions!")
         if feedback:
             try:
                 self._feedback.wait(1.0)
@@ -459,7 +473,7 @@ class DolphinConnection(object):
                 if not callback[1]:
                     # We only wanted to read this value once, not subscribe to it.
                     self._dereg_callback(addr)
-                gevent.spawn(callback[0], val)
+                gevent.spawn(callback[0], val).link_exception(_logOnException)
             else:
                 logger.warning("No recipient for address 0x%x, value 0x%x",
                                addr, val)
@@ -471,7 +485,7 @@ class DolphinConnection(object):
                 if not callback[1]:
                     # We only wanted to read this value once, not subscribe to it.
                     self._dereg_callback(addr)
-                gevent.spawn(callback[0], data)
+                gevent.spawn(callback[0], data).link_exception(_logOnException)
             else:
                 logger.warning("No recipient for address 0x%x, data %s",
                                addr, data)
