@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 setup(
     name="dolphinWatch",
-    version="0.2",
+    version="0.3",
     packages=find_packages(),
     install_requires=['gevent>=1.1'],
 
